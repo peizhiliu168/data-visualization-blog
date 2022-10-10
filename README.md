@@ -6,7 +6,7 @@ Hope you enjoy the view and stay tuned for more :)
 ## About me
 I am a senior at Northwestern University. My area of study is Computer Science and my area of interest lies in high performance computing (HPC) and networked systems. Generally, what motivates me to study this subject is its diverse applications and the coupling of theory and practice. To me, it is both fun to think about and *potentially* useful.
 
-When I'm not staring at the screen (which is quite rare, unfortunately), I enjoy taking long walks around campus and playing badminton. Not getting enough sleep is another hobby of mine, at least that's what other people tell me. Trust me, it's not fun.
+When I'm not staring at the screen (which is quite rare, unfortunately), I enjoy taking long walks around campus and playing badminton.
 
 Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/peizhiliu/)
 
