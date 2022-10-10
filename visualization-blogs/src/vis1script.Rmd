@@ -1,0 +1,73 @@
+---
+title: "Visualization 1"
+output: html_document
+date: "2022-10-09"
+---
+
+```{r}
+# Install libraries
+install.packages(c("ggthemes","fauxnaif", "patchwork"))
+
+# Load libraries
+library(tidyverse)
+library(ggthemes)
+library(fauxnaif)
+library(patchwork)
+library(scales)
+
+```
+
+```{r}
+Category <- c("Food at home", "Food away from home", "Energy commodities", "Energy services", "Commodities less food and energy commodities", "Services less energy services")
+year_precent_chg <- c(13.5, 8.0, 27.1, 19.8, 7.1, 6.1) / 100
+```
+
+```{month_percent_chg <- c(0.7, 0.9, -11.7, 1.8, 0.5, 0.5) / 100}
+relative_importance <- c(8.414, 5.113, 5.170, 3.612, 21.168, 56.523)
+
+cpi_data <- data.frame(Category, year_precent_chg, month_percent_chg, relative_importance)
+```
+
+```{r}
+cpi_data %>%
+  ggplot(aes(x=year_precent_chg, y=month_percent_chg, size=relative_importance, color=Category)) + 
+  xlim(0.05, 0.275) + xlab("Over-the-year percent change") +
+  scale_x_continuous(labels = percent) +
+  ylim(-14.0, 4) + ylab("Over-the-month percent change") +
+  scale_y_continuous(labels = percent) +
+  scale_size(name="Relative Importance") +
+  geom_vline(xintercept = 0.083, linetype="dotted", color = "green", size=1) +
+  geom_hline(yintercept = 0, linetype="dotted", color = "green", size=1) +
+  annotate(geom="text", x=0.115, y=-0.12, label="All items: 8.3%", size=3) +
+  annotate(geom="text", x=0.08, y=-0.004, label="All items: 0.0%", size=3) +
+  geom_point(alpha=0.5)
+```
+
+```{r}
+covid_data <- read.csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+```
+
+```{r}
+covid_data %>%
+  mutate(date=as.Date(date, format="%Y-%m-%d")) %>%
+  filter(between(date, as.Date('2022-09-01'), as.Date('2022-09-30'))) %>%
+  filter(!is.na(continent) & continent!="" & !is.na(total_vaccinations_per_hundred) & !is.na(total_boosters_per_hundred) & !is.na(new_cases_per_million)) %>%
+  select(location, new_cases_per_million, total_vaccinations_per_hundred, total_boosters_per_hundred) %>%
+  group_by(location) %>%
+  summarise(new_cases_per_million_per_month = sum(new_cases_per_million), mean_vax = mean(total_vaccinations_per_hundred), mean_booster = mean(total_boosters_per_hundred)) -> clean_covid_data
+```
+
+```{r}
+clean_covid_data %>%
+  arrange(desc(new_cases_per_million_per_month)) %>%
+  ggplot(aes(x=mean_vax, y=mean_booster, size=new_cases_per_million_per_month, color=location)) +
+  scale_size_continuous(range=c(3,15)) +
+  xlab("Average total vaccinations in 100 people") + 
+  ylab("Average total boosters in 100 people") +
+  ggtitle("Per Million New COVID Cases and Vaccination Status (Sept. 2022)") +
+  geom_point(alpha=0.5) + 
+  geom_text(size=1, color="black", aes(label=location), show.legend = FALSE) +
+  guides(color="none") + 
+  labs(size="New Cases / Million / Month")
+ ggsave("../static/covid_booster_vaccine.png", dpi=1200)
+```
