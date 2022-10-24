@@ -1,0 +1,157 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#install.packages("gganimate")
+#install.packages("gifski")
+#install.packages("png")
+#install.packages("ggrepel")
+#install.packages("ggpubr")
+packages <- c("tidyverse", "reshape2", "fauxnaif", "gganimate", "ggthemes",
+              "stringr", "gridExtra", "gifski", "png", "ggrepel", "ggpubr")
+lapply(packages, require, character.only = TRUE)
+```
+
+```{r}
+# Load data
+africa_energy <- read.csv("../data/african-regional-energy-statistics-2014.csv")
+world_gdp <- read.csv("../data/WorldGDP.csv")
+```
+
+```{r}
+# Combine datasets
+world_gdp %>%
+  select(Country.Name, starts_with("X")) %>%
+  melt(id.vars = c("Country.Name")) -> world_gdp_sub_T
+world_gdp_sub_T$variable <- as.numeric(gsub("^.{0,1}", "", world_gdp_sub_T$variable))
+world_gdp_sub_T <- rename(world_gdp_sub_T, RegionName=Country.Name, Date=variable, GDP=value)
+africa_energy %>%
+  select(-IndicatorName) %>%
+  left_join(y=world_gdp_sub_T) %>%
+  dcast(...~Indicator, value.var="Value") -> africa_join
+africa_energy <- as.numeric(africa_energy$Date)
+```
+
+```{r}
+# Africa GDP Graph
+africa_join %>%
+  select(RegionName, Unit, Region, GDP, Date) %>%
+  filter(Region > 10000 & Unit=="GWh" & !is.na(GDP)) -> plot_data
+
+plot_data %>%
+  mutate(RegionName = as.character(RegionName)) %>%
+  filter(Date==2014) %>%
+  arrange(desc(GDP)) %>% 
+  mutate(rank = row_number()) -> plot_order
+
+n_countries = 5
+
+plot_data %>%
+  mutate(RegionName = as.character(RegionName)) %>%
+  mutate(plot_label = ifelse(RegionName %in% plot_order$RegionName[1:n_countries], RegionName, 'Other')) %>%
+  mutate(plot_label = factor(plot_label, levels = c('Other', rev(unique(plot_order$RegionName[1:n_countries]))))) %>%
+  group_by(plot_label, Date) %>%
+  summarise(value = sum(GDP)) -> final_plot
+
+  
+#  group_by(Date) %>%
+#  summarise(sum(GDP)) %>%
+final_plot %>%
+  ggplot(aes(x=Date, y=value, fill=plot_label)) + 
+  xlab("Year") + ylab("GDP (USD)") +
+  ylim(0, 3e12) + 
+  ggtitle("Total Africa GDP (2000 to 2014)") +
+  geom_area(color="black")
+#  geom_line(size = 1.5)
+ggsave("../static/Africa-GDP.png", dpi=1200)
+```
+
+```{r}
+# GDP vs energy consumption and production graph
+africa_join %>%
+  select(RegionName, Unit, Region, GDP, Date, `507`) %>%
+  filter(Region > 10000 & Unit=="GWh")  %>%
+  ggplot(aes(x=GDP, y=`507`, color="red")) + 
+  scale_x_continuous(trans='log10') + 
+  scale_y_continuous(trans='log10') +
+  xlab("GDP (log(USD))") + 
+  ylab("Total Electricity Production (log(GWh))") +
+  geom_point(size = 2) -> p
+
+p + transition_time(as.integer(Date)) +
+  geom_text(aes(label=RegionName), 
+    nudge_x = 0.1, nudge_y = 0.1, 
+    check_overlap = T, color="black"
+  ) + 
+  labs(title = "Total Electricity Production vs. GDP (Year {frame_time})") +
+  theme(legend.position = "none") + 
+  anim_save("../static/EnergyProd-GDP.gif", dpi=1200) -> p
+animate(p, nframes=15, duration=5)
+```
+
+```{r}
+africa_join %>%
+  filter(Region > 10000 & Unit=="GWh" & !is.na(GDP)) %>%
+  select(RegionName, `507`, `21772773`, GDP, Date) %>%
+  transform(ratio = `21772773`/`507` * 100) %>%
+  ggplot(aes(x=X507, y=ratio, size=GDP, color=RegionName)) + 
+  scale_x_continuous(trans='log10') +
+  scale_size_continuous(range=c(3,15)) +
+  ylim(0, 100) + 
+  xlab("Total Electricity Produced (log(GWh))") + 
+  ylab("% Sustainable") + 
+  ggtitle("Percent of Electricity Produced Sustainably (Year {frame_time})") +
+  geom_point(alpha=0.5) + 
+  geom_text(size=1.7, color="black", aes(label=RegionName), show.legend = FALSE) + 
+  guides(color="none") + 
+  labs(size="GDP (USD)") + 
+  transition_time(as.integer(Date)) +
+  anim_save("../static/Sustainable-Energy.gif", dpi=1200) -> p
+animate(p, nframes=15, duration=5)
+#ggsave("../static/Sustainable-Energy.png", dpi=1200)
+```
+
+```{r}
+africa_join %>%
+  filter(Region > 10000 & Unit=="GWh") %>%
+  select(RegionName, `509`, `21773373`, `21773473`,`21773573`, Date) %>%
+  group_by(Date) %>%
+  replace(is.na(.), 0) %>%
+  summarise(industry_consumption = sum(`509`), household_consumption = sum(`21773373`), gov_consumption = sum(`21773473`), other_consumption=sum(`21773573`))  %>%
+  melt(id.vars = c("Date")) %>%
+  ggplot(aes(fill=variable, y=value, x=Date)) + 
+  geom_bar(position="stack", stat="identity") + 
+  xlab("Year") + ylab("Electricity Consumption (GWh)") + 
+  xlim(1999, 2014) +
+  scale_fill_discrete(labels=c("Industry", "Household", "Public", "Other")) +
+  guides(fill=guide_legend(title="Sector Consumption")) +
+  ggtitle("Electricity Consumption by Sector (2000-2014)") +
+  theme(plot.title = element_text(size=8), plot.background = element_rect(fill = "White")) -> p
+
+africa_join %>%
+  filter(Region > 10000 & Unit=="GWh") %>%
+  select(RegionName, `509`, `21773373`, `21773473`,`21773573`, Date) %>%
+  group_by(Date) %>%
+  replace(is.na(.), 0) %>%
+  summarise(industry_consumption = sum(`509`), household_consumption = sum(`21773373`), gov_consumption = sum(`21773473`), other_consumption=sum(`21773573`))  %>%
+  melt(id.vars = c("Date")) %>%
+  ggplot(aes(fill=variable, y=value, x=Date)) + 
+  geom_bar(position="fill", stat="identity") + 
+  xlab("Year") + ylab("Proportion Electricity Consumption") + 
+  xlim(1999, 2014) +
+  scale_fill_discrete(labels=c("Industry", "Household", "Public", "Other")) +
+  guides(fill=guide_legend(title="Sector Consumption")) +
+  ggtitle("Proportion Electricity Consumption by Sector (2000-2014)") + 
+  theme(plot.title = element_text(size=8), plot.background = element_rect(fill = "White")) -> q
+
+ggarrange(p,q, ncol=2, common.legend=T)
+
+ggsave("../static/Energy-Consumption.png", dpi=1200, bg="white")
+```
+
+```{r}
+
+ggsave("../static/Energy-Consumption-Prop.png", dpi=1200)
+```

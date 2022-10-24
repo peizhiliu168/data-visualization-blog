@@ -63,7 +63,7 @@ clean_covid_data %>%
   ggplot(aes(x=mean_vax, y=mean_booster, size=new_cases_per_million_per_month, color=location)) +
   scale_size_continuous(range=c(3,15)) +
   xlab("Average total vaccinations in 100 people") + 
-  ylab("Average total boosters in 100 people") +
+  ylab("Average total boosters in 100 people") +q
   ggtitle("Per Million New COVID Cases and Vaccination Status (Sept. 2022)") +
   geom_point(alpha=0.5) + 
   geom_text(size=1, color="black", aes(label=location), show.legend = FALSE) +
