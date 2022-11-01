@@ -106,8 +106,9 @@ africa_join %>%
   geom_point(alpha=0.5) + 
   geom_text(size=1.7, color="black", aes(label=RegionName), show.legend = FALSE) + 
   guides(color="none") + 
-  labs(size="GDP (USD)") + 
-  transition_time(as.integer(Date)) +
+  labs(size="GDP (USD)") -> p
+
+p + transition_time(as.integer(Date)) +
   anim_save("../static/Sustainable-Energy.gif", dpi=1200) -> p
 animate(p, nframes=15, duration=5)
 #ggsave("../static/Sustainable-Energy.png", dpi=1200)

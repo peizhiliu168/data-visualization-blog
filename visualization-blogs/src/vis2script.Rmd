@@ -1,0 +1,109 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#install.packages("gganimate")
+#install.packages("gifski")
+#install.packages("png")
+#install.packages("ggrepel")
+#install.packages("ggpubr")
+packages <- c("tidyverse", "reshape2", "fauxnaif", "gganimate", "ggthemes",
+              "stringr", "gridExtra", "gifski", "png", "ggrepel", "ggpubr")
+lapply(packages, require, character.only = TRUE)
+```
+
+```{r}
+# Load data
+africa_energy <- read.csv("../data/african-regional-energy-statistics-2014.csv")
+world_gdp <- read.csv("../data/WorldGDP.csv")
+```
+
+```{r}
+# Combine datasets
+world_gdp %>%
+  select(Country.Name, starts_with("X")) %>%
+  melt(id.vars = c("Country.Name")) -> world_gdp_sub_T
+world_gdp_sub_T$variable <- as.numeric(gsub("^.{0,1}", "", world_gdp_sub_T$variable))
+world_gdp_sub_T <- rename(world_gdp_sub_T, RegionName=Country.Name, Date=variable, GDP=value)
+africa_energy %>%
+  select(-IndicatorName) %>%
+  left_join(y=world_gdp_sub_T) %>%
+  dcast(...~Indicator, value.var="Value") -> africa_join
+africa_energy <- as.numeric(africa_energy$Date)
+```
+
+```{r}
+africa_join %>%
+  filter(Region > 10000) %>%
+  select(RegionName, GDP, Date) %>%
+  filter(Date==2000 | Date==2005 | Date==2010) %>%
+  mutate(Date=as.character(Date)) %>%
+  ggplot(aes(x=Date, y=GDP)) + 
+  xlab("Year") + ylab("log GDP (USD)") + ggtitle("Africa GDP Distribution (2000 - 2010)") +
+  ggdist::stat_halfeye(adjust = .5, width = .4, .width = 0, justification = -.3, point_colour = NA) + # Draw the density plot
+  scale_y_continuous(trans='log2', labels = function(x) formatC(x, format = "e", digits = 2)) + # Make this a log plot (log-normal)
+  geom_boxplot(width = 0.1, outlier.shape = NA) + # Draw box plot to show uncertainty
+  ggdist::stat_dots(side = "left", dotsize = 2, justification = 1.1, binwidth = .1) # Draw the dot plot
+
+ggsave("../static/Africa-GDP-Dist.png", dpi=1200, bg="white")
+```
+
+Uncertainty is displayed and calculated automatically using the geom_boxplot function, showing the different quartiles of the country's GDP in Africa from 2000 to 2010. Uncertainty is depicted using median and IQR since there are outliers in the dataset. I chose a log scale for GDP to make the plot easier to visualize. The added benefit is that people can easily see that the distribution of country GDPs in Africa roughly follows a log-normal distribution, indicating right-skew. The added dot plot and density plot is used to further depict nuances in the distribution for each year.
+
+```{r}
+tuition <- read.csv("../data/college-tuition-2018.csv")
+```
+
+```{r}
+# Select relevant data
+public_in_state <- tuition %>%
+  filter(type=="Public") %>%
+  select(type, in.state.cost) 
+
+public_out_state <- tuition %>%
+  filter(type=="Public") %>%
+  select(type, out.state.cost) 
+
+private_no_profit <- tuition %>%
+  filter(type=="Private") %>%
+  select(type, in.state.cost)
+
+private_for_profit <- tuition %>%
+  filter(type=="For-Profit") %>%
+  select(type, in.state.cost)
+
+```
+
+```{r}
+# Calculate median, Q1, and Q3 for different university types because of outliers
+public_in_state %>%
+  summarise(median_tuition = median(in.state.cost),  Q1_tuition=quantile(in.state.cost, probs=0.25), Q3_tuition=quantile(in.state.cost, probs=0.75)) -> public_in_state_stat
+
+public_out_state %>%
+  summarise(median_tuition = median(out.state.cost), Q1_tuition=quantile(out.state.cost, probs=0.25), Q3_tuition=quantile(out.state.cost, probs=0.75)) -> public_out_state_stat
+
+private_no_profit %>%
+  summarise(median_tuition = median(in.state.cost), Q1_tuition=quantile(in.state.cost, probs=0.25), Q3_tuition=quantile(in.state.cost, probs=0.75)) -> private_no_profit_stat
+
+private_for_profit %>%
+  summarise(median_tuition = median(in.state.cost), Q1_tuition=quantile(in.state.cost, probs=0.25), Q3_tuition=quantile(in.state.cost, probs=0.75)) -> private_for_profit_stat
+```
+
+```{r}
+tuition_join <- rbind(public_in_state_stat, public_out_state_stat, private_for_profit_stat, private_no_profit_stat)
+tuition_join <- cbind(type=c("Public in-State", "Public out-of-State", "Private for-Profit", "Private non-Profit"), tuition_join)
+```
+
+```{r}
+tuition_join %>%
+  ggplot(aes(x=type, y=median_tuition, fill=type)) + 
+  geom_bar(stat = "identity") + # draw the bar chart, currently without uncertainties
+  geom_errorbar(aes(ymin=Q1_tuition, ymax=Q3_tuition,  width=.2)) +  # add in the error bars with first and third quartiles
+  xlab("University Type") + ylab("Tuition (USD)") + ggtitle("Median Tuition of Different University Types in the US (2018-2019)") + 
+  theme(legend.position = "none")
+ggsave("../static/University-Tuition.png", dpi=1200, bg="white")
+```
+
+I calculated uncertainty by taking the median, Q1, and Q3 of different university types across the US since the dataset contains outliers. I chose to represent the median using the height of the bar chart and the IQR using the error bars since this allows the user to easily see the spread of the data and roughly pick out the percentage overlap between tuition rates of different university types.
