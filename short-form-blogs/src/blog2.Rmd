@@ -1,0 +1,148 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# install dependencies
+install.packages(c("plotly", "ggridges", "devtools", "shiny", "countrycode", "wesanderson"))
+```
+
+```{r}
+# load dependencies
+packages <- c("tidyverse", "reshape2", "fauxnaif", "gganimate", "ggthemes",
+              "stringr", "gridExtra", "gifski", "png", "ggrepel", "scales",
+              "lubridate", "paletteer", "GGally", "systemfonts", "extrafont",
+              "colorspace", "sf", "rnaturalearth", "ggmap",
+              "rnaturalearthdata", "paletteer", "stringr", "haven",
+              "plotly", "ggridges", "shiny", "countrycode", "extrafont", "wesanderson")
+
+lapply(packages, require, character.only = TRUE)
+```
+
+```{r}
+# load vdem dataset
+devtools::install_github("vdeminstitute/vdemdata")
+devtools::install_github("thomasp85/transformr")
+library(vdemdata)
+```
+
+```{r}
+vdem %>%
+  select(country_name, year, v2mecenefi, v2mecenefi_osp, v2cafexch, v2cafexch_osp) %>%
+  filter(year >= 2000 & year <= 2021) -> vdem_censor_viol
+
+# join data with geo data
+heat_countries <- ne_countries(country = unique(vdem_censor_viol$country_name), returnclass = "sf")
+
+heat_countries$continent  <- countrycode(sourcevar = heat_countries$geounit,
+                             origin = "country.name",
+                             destination = "continent")
+
+inner_join(heat_countries, vdem_censor_viol, 
+           by = c("geounit" = "country_name")) -> vdem_censor_viol_mapping
+```
+
+```{r}
+t <- theme(
+  panel.background = element_rect(fill = "#f7f3ef",
+                                colour = "#f7f3ef",
+                                size = 0.5, 
+                                color = NA),
+  plot.background = element_rect(fill = "#f7f3ef", color = NA),
+  panel.border = element_rect(colour = "black", fill=NA, size=0.1),
+  text=element_text(family="Arial"),
+  legend.background = element_rect(fill = alpha("white", 0.0))
+)
+```
+
+```{r}
+# Heatmap of censorship and academic freedom for all countries, 2021
+vdem_censor_viol_mapping %>% 
+  filter(year == 2021) %>%
+  ggplot(aes(fill = v2mecenefi_osp)) + 
+  geom_sf() + 
+  scale_fill_viridis_c(option = "C", name = "Internet Censorship") +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    rect = element_blank(),
+  ) + t -> plot1
+
+vdem_censor_viol_mapping %>% 
+  filter(year == 2021) %>%
+  ggplot(aes(fill = v2cafexch_osp)) + 
+  geom_sf() + 
+  scale_fill_viridis_c(option = "C", name = "Academic Censorship") +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    rect = element_blank(),
+  ) + t -> plot2
+
+require(gridExtra)
+grid.arrange(plot1, plot2, nrow=2,
+             top="Internet Censorship and Academic Exchange Freedom of Countries (2021)") -> draw
+
+cowplot::ggdraw(draw) + t
+
+ggsave("../static/academic-exchange-inter-censorship-map.png")
+```
+
+```{r}
+# Scatterplot and line fit of censorship and academic freedom based on region, 2021
+vdem_censor_viol_mapping %>%
+  filter(year == 2021 & !is.na(continent)) %>%
+  select(geounit, continent, v2mecenefi_osp, v2cafexch_osp) %>%
+  ggplot(aes(x=v2mecenefi_osp, y=v2cafexch_osp)) + 
+  geom_point() + 
+  geom_smooth(method=lm , color="#C93311", fill="#899DA4", se=TRUE) +
+  facet_wrap(~ continent) + 
+  xlab("Internet Censorship Effort (Lower is more stringent)") + ylab("Academic Exchange Freedom (Lower is more stringent)") + ggtitle("Academic Exchange vs. Internet Censorship, Regions (2021)") +
+  t
+
+
+ggsave("../static/academic-exchange-inter-censorship-dot.png")
+```
+
+```{r}
+# Histogram of academic freedom and censorship among all countries throughout the years (MMO), animated
+vdem_censor_viol_mapping %>%
+  select(geounit, year, v2mecenefi, v2cafexch) %>%
+  gather(key="Variable", value="index_val", 3:4) %>%
+  ggplot(aes(x=index_val, group = Variable, fill = Variable)) +
+  geom_density(alpha = 0.5, addMeanLine=T, ) + 
+    scale_fill_manual(values=wes_palette(n=3, name="Royal1"), name='Variable',labels=c("Academic Censorship", "Internet Censorship")) +
+  xlab("Standardized Interval Value (Lower is more stringent)") + ylab("Density") +
+  t -> p
+  
+p + transition_time(as.integer(year)) +
+  labs(title = "Academic Exchange Freedom & Internet Censorship, Distribution ({frame_time})") + 
+  anim_save("../static/academic-exchange-inter-censorship-hist.gif", dpi=1200)
+```
+
+```{r}
+# Grouped box plot of the indices
+vdem_censor_viol_mapping %>%
+  select(geounit, year, v2mecenefi, v2cafexch) %>%
+  filter(year %in% c(2000, 2005, 2010, 2015, 2020)) %>%
+  gather(key="Variable", value="index_val", 3:4) %>%
+  ggplot(aes(x=as.character(year), y=index_val, fill = Variable)) +
+  geom_boxplot() + 
+  scale_fill_manual(values=wes_palette(n=3, name="Royal1"), name='Variable',labels=c("Academic Censorship", "Internet Censorship")) + 
+  xlab("Year") + ylab("Standardized Interval Value (Lower is more stringent)") + ggtitle("Academic Exchange Freedom & Internet Censorship (2000 - 2020)") + 
+  t
+
+ggsave("../static/academic-exchange-inter-censorship-box.png")
+```
+
+```{r}
+# References
+library(knitr)
+library(rcrossref)
+knitr::write_bib(packages, 
+                 width = 60, 
+                 file = "C:\\Users\\peizh\\Documents\\Synced\\2022_Fall_Classes\\PolySci390\\Blog\\short-form-blogs\\static\\packages.bib")
+```
