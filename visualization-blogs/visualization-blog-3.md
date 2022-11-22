@@ -9,7 +9,9 @@ An excellent visualization of global plastic production that I would like to rep
 
 ## Data Sources
 - Microplastic abundance in oceans - https://microplastics.springeropen.com/articles/10.1186/s43591-021-00013-z
+- Ocean microplastics map - https://www.ncei.noaa.gov/products/microplastics
 - Ocean plastic pollution by country and per capita - https://ourworldindata.org/plastic-pollution
+- Synthetic fiber discharge (used to calculate microplastics from synthetic fibers) - https://www.umweltbundesamt.de/sites/default/files/medien/378/publikationen/texte_64_2015_sources_of_microplastics_relevant_to_marine_protection_1.pdf
 - Synthetic fabrics export - https://oec.world/en/profile/hs/synthetic-fabrics#:~:text=In%202020%2C%20the%20top%20exporters,%2C%20and%20China%20(%24114M).
 
 
