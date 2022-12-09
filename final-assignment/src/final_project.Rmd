@@ -1,0 +1,323 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# install dependencies
+install.packages(c("plotly", "ggridges", "devtools", "shiny", "countrycode", "wesanderson", "ncdf4", "raster", "rgdal", "abind", "ggnewscale", "oec", "countrycode", "palmerpenguins"))
+```
+
+```{r}
+# load dependencies
+packages <- c("tidyverse", "reshape2", "fauxnaif", "gganimate", "ggthemes",
+              "stringr", "gridExtra", "gifski", "png", "ggrepel", "scales",
+              "lubridate", "paletteer", "GGally", "systemfonts", "extrafont",
+              "colorspace", "sf", "rnaturalearth", "ggmap",
+              "rnaturalearthdata", "paletteer", "stringr", "haven",
+              "plotly", "ggridges", "shiny", "countrycode", "extrafont", "wesanderson", "ncdf4", "raster", "rgdal", "abind", "ggnewscale", "countrycode", "palmerpenguins")
+
+lapply(packages, require, character.only = TRUE)
+font_import()
+loadfonts(device = "win")
+```
+
+```{r}
+# install.packages('devtools')
+devtools::install_github('r-lib/ragg')
+
+```
+
+```{r}
+t <- theme(
+  panel.background = element_rect(fill = "#f7f3ef",
+                                colour = "#f7f3ef",
+                                size = 0.5, 
+                                color = NA),
+  plot.background = element_rect(fill = "#f7f3ef", color = NA),
+  panel.border = element_rect(colour = "black", fill=NA, size=0.1),
+  text=element_text(family="Arial"),
+  legend.background = element_rect(fill = alpha("white", 0.0))
+)
+```
+
+```{r}
+# Read in microplastics satellite data
+micro_plastics_data <- nc_open("../data/microplastics_2018_june.nc")
+
+lon <- ncvar_get(micro_plastics_data, "lon")
+lat <- ncvar_get(micro_plastics_data, "lat")
+time <- ncvar_get(micro_plastics_data, "time")
+
+micro_plastics_array.array <- ncvar_get(micro_plastics_data, "MP_concentration")
+fillvalue <- ncatt_get(micro_plastics_data, "MP_concentration", "_FillValue")
+
+# Clean data
+micro_plastics_array.array[micro_plastics_array.array == fillvalue$value] <- NA
+x <- micro_plastics_array.array[1:720,,]
+y <- micro_plastics_array.array[721:1440,,]
+micro_plastics_array_reordered.array <- abind(y,x,along = 1)
+
+# Convert into raster dataframe
+r <- raster(t(micro_plastics_array_reordered.array[,,1]), 
+            xmn=min(lon) - max(lon) / 2, 
+            xmx=max(lon) - max(lon) / 2, 
+            ymn=min(lat), 
+            ymx=max(lat), 
+            crs=CRS("+proj=longlat +ellps=WGS84 
+                    +datum=WGS84 +no_defs+ towgs84=0,0,0"))
+raster_pts <- rasterToPoints(r, spatial = TRUE)
+raster_df  <- data.frame(raster_pts)
+
+```
+
+\
+
+```{r}
+# Read in plastic waste and pollution datasets
+plastic_waste_2010 <- read.csv("../data/plastic_waste_2010.csv")
+plastic_emit_2019 <- read.csv("../data/plastic_ocean_emit_2019.csv")
+```
+
+```{r}
+# join data with geo data
+all_countries <- ne_countries(returnclass = "sf")
+
+countries_waste_mapping <- inner_join(all_countries, 
+                                      plastic_waste_2010, 
+                                      by = c("iso_a3" = "Code"))
+
+countries_emit_mapping <- inner_join(all_countries, 
+                                      plastic_emit_2019, 
+                                      by = c("iso_a3" = "Code"))
+```
+
+```{r}
+# Plot plastic waste generated
+countries_waste_mapping %>%
+  ggplot(aes(fill=Metric.Tonnes)) + 
+  geom_sf() + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), name = "Metric Tonnes", trans = "log") + 
+  new_scale_fill() + 
+  geom_raster(data = raster_df, aes(x=x, y=y, fill=layer), inherit.aes = FALSE) + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), 
+                       limits = c(1e2, 5e7),
+                       trans = "log",
+                       name = "MP Concentration (n/km^2)") +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +  
+  ggtitle("Plastic Waste Generated & Microplastics Concentration (2010)") + 
+  t
+
+ggsave("../figures/plastic-waste-microplastics-concentration.png", 
+       width=15, height=8)
+```
+
+```{r}
+# Plot plastic waste emitted
+countries_emit_mapping %>%
+  ggplot(aes(fill=Metric.Tonnes)) + 
+  geom_sf() + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), name = "Metric Tonnes", trans = "log") + 
+  new_scale_fill() + 
+  geom_raster(data = raster_df, aes(x=x, y=y, fill=layer), inherit.aes = FALSE) + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), 
+                       limits = c(1e2, 5e7),
+                       trans = "log",
+                       name = "MP Concentration (n/km^2)") +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +  
+  ggtitle("Plastic Waste Emitted into Ocean & Microplastics Concentration (2019)") + 
+  t
+
+ggsave("../figures/plastic-emit-microplastics-concentration.png", 
+       width=15, height=8)
+```
+
+```{r}
+# Load microplastics proportion data
+proportion_data <- read.csv("../data/region_type_proportion.csv")
+
+proportion_data %>%
+  dplyr::select(Region, Synthetic.Textiles, Tyres, Road.Markings, Marine.Coatings, Personal.Care.Products, Plastic.Pellets) %>%
+  melt(value.name = "Percent") %>%
+  ggplot(aes(fill=variable, y=Percent, x=Region, label=Percent)) + 
+  geom_bar(position="stack", stat="identity") + 
+  ggtitle("Sources of Primary Microplastics Released into Ocean") + 
+  coord_flip() + 
+  guides(fill=guide_legend(title="Microplastic Source")) + 
+  scale_fill_discrete(labels=c("Synthetic Textiles", "Tyres", "Road Markings", "Marine Coatings", "Personal Care Products", "Plast Pellets")) + 
+  t
+
+ggsave("../figures/microplastic-src-percentage.png", 
+       width=10, height=5)
+```
+
+```{r}
+# Load economic HS data
+hs92_6d <- read_dta("../data/HS92_6dig.dta")
+# Filter out synthetic fibers
+hs92_6d %>%
+  filter(as.numeric(substr(hs_product_code, 1, 2)) == 54 | as.numeric(substr(hs_product_code, 1, 2)) == 55) -> hs_sny_fibers
+# Filter out nans
+hs_sny_fibers %>%
+  filter(!is.na(export_value)) -> hs_syn_fibers_export
+hs_sny_fibers %>%
+  filter(!is.na(import_value)) -> hs_syn_fibers_import
+```
+
+```{r}
+# Synthetic fibers export graph by year
+hs_syn_fibers_export %>%
+  dplyr::select(year, export_value, location_code) %>%
+  group_by(location_code, year) %>%
+  summarise(s = sum(export_value)) -> tmp
+
+tmp %>%
+  group_by(location_code) %>%
+  summarise(year_total=sum(s)) %>%
+  mutate(rank = rank(-year_total), 
+         group = ifelse(rank <= 6, location_code, 'Other')) %>%
+  ungroup() -> tmp2
+
+inner_join(tmp, tmp2,
+           by = c("location_code" = "location_code")) -> hs_syn_fibers_export_agg
+
+inner_join(all_countries, hs_syn_fibers_export_agg, 
+              by = c("iso_a3" = "location_code")) %>%
+  dplyr::select(year, s, group) %>%
+  st_drop_geometry() %>%
+  group_by(group, year) %>%
+  summarize(total = sum(s)) %>%
+  ggplot(aes(x=year, y=total, fill=factor(group, levels=c("CHN", "DEU", "JPN", "KOR", "TWN", "USA", "Other")))) + 
+  geom_area(alpha=0.6 , size=1, colour="black") + 
+  ggtitle("Value of Synthetic Fibers Export (1995 - 2020)") + 
+  xlab("Year") + ylab("Trade Value ($)") + 
+  guides(fill=guide_legend(title="Country")) + 
+  t
+
+ggsave("../figures/synthetic-fiber-export.png", 
+       width=8, height=5)
+```
+
+```{r}
+# Synthetic fibers import graph by year
+hs_syn_fibers_import %>%
+  dplyr::select(year, import_value, location_code) %>%
+  group_by(location_code, year) %>%
+  summarise(s = sum(import_value)) -> tmp
+
+tmp %>%
+  group_by(location_code) %>%
+  summarise(year_total=sum(s)) %>%
+  mutate(rank = rank(-year_total), 
+         group = ifelse(rank <= 6, location_code, 'Other')) %>%
+  ungroup() -> tmp2
+
+inner_join(tmp, tmp2,
+           by = c("location_code" = "location_code")) -> hs_syn_fibers_import_agg
+
+inner_join(all_countries, hs_syn_fibers_import_agg, 
+              by = c("iso_a3" = "location_code")) %>%
+  dplyr::select(year, s, group) %>%
+  st_drop_geometry() %>%
+  group_by(group, year) %>%
+  summarize(total = sum(s)) %>%
+  ggplot(aes(x=year, y=total, fill=factor(group, levels=c("CHN", "DEU", "ITA", "USA", "VNM", "Other")))) + 
+  geom_area(alpha=0.6 , size=1, colour="black") + 
+  ggtitle("Value of Synthetic Fibers Import (1995 - 2020)") + 
+  xlab("Year") + ylab("Trade Value ($)") + 
+  guides(fill=guide_legend(title="Country")) + 
+  t
+
+ggsave("../figures/synthetic-fiber-import.png", 
+       width=8, height=5)
+```
+
+```{r}
+china_synth_2017 <- read.csv("../data/china_synthetic_production_2017.csv")
+china_synth_2017$mTonnes = china_synth_2017$Tonnes / 1e6
+china_synth_2017 %>%
+  ggplot(aes(x=Month, y=mTonnes)) + 
+    scale_x_continuous(breaks = c(2,3,4,5, 6, 7,8,9,10,11), labels=c("Feb.","March","April","May","June","July","Aug.","Sept.", "Oct.", "Nov.")) +
+  geom_line(color="#C93311", size=1.5) + 
+  geom_point(color = "#C93311", size = 4, shape = 21, fill = "white") + 
+  ggtitle("China Synthetic Fiber Production in 2017") +
+  ylab("Million Tonnes") + ylim(0,4.5) + 
+  t
+ggsave("../figures/china-synthetic-prod-2017.png", 
+       width=8, height=5)
+```
+
+```{r}
+# Read in microplastics satellite data
+micro_plastics_data_2017 <- nc_open("../data/microplastics_2017_06.nc")
+
+lon <- ncvar_get(micro_plastics_data_2017, "lon")
+lat <- ncvar_get(micro_plastics_data_2017, "lat")
+time <- ncvar_get(micro_plastics_data_2017, "time")
+
+micro_plastics_array_2017.array <- ncvar_get(micro_plastics_data_2017, "MP_concentration")
+fillvalue <- ncatt_get(micro_plastics_data_2017, "MP_concentration", "_FillValue")
+
+# Clean data
+micro_plastics_array_2017.array[micro_plastics_array_2017.array == fillvalue$value] <- NA
+x <- micro_plastics_array_2017.array[1:720,,]
+y <- micro_plastics_array_2017.array[721:1440,,]
+micro_plastics_array_reordered_2017.array <- abind(y,x,along = 1)
+
+# Convert into raster dataframe
+r2017 <- 1
+r2017 <- stack(paste("../data/", "microplastics_2017_06", ".nc", sep=""))
+raster_pts <- rasterToPoints(r2017, spatial = TRUE)
+raster_df_2017  <- as.data.frame(sapply(data.frame(raster_pts), as.numeric))
+
+```
+
+```{r}
+world <- map_data("world")
+
+#https://stackoverflow.com/questions/6862742/draw-a-circle-with-ggplot2
+dat = data.frame(x=runif(1), y=runif(1))
+
+raster_df_2017 %>%
+  dplyr::select(x, y, starts_with("X")) %>%
+  filter((y > 20 & y < 40) & (x > 110 & x < 140)) %>%
+  melt(id=c("x", "y")) %>%
+  mutate(day=as.numeric(str_sub(variable,start=-2))) %>%
+  ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "black", fill = "lightgray", size = 0.1,
+  ) +
+  geom_raster(aes(x=x, y=y, fill=value), inherit.aes = FALSE) + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), 
+                       limits = c(1e-3,5e7),
+                       trans = "log",
+                       name = "MP Concentration (n/km^2)") +
+  xlim(110, 140) + ylim(20,40) + 
+  geom_point(aes(x=122, y=32), data=dat, size=40, shape=1, color="#C93311", stroke=2) + 
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank()) + 
+  t -> p
+
+
+p + 
+  transition_time(as.integer(day)) + 
+  labs(title = "Microplastics Concentration in East China Sea (June {frame_time})") -> d 
+
+d + anim_save("../figures/china-microplastics-release.gif", 
+            dpi=1200, 
+            width=8, 
+            height=5)
+
+```
+
+```{r}
+waste_primary <- read.csv("../data/region_waste_micro.csv")
+
+waste_primary %>%
+  melt(id="Region") %>%
+  ggplot(aes(fill=variable, y=value, x=Region)) + 
+  coord_flip() + 
+  geom_bar(stat="identity") + 
+  t
+```
