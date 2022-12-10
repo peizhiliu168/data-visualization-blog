@@ -1,0 +1,29 @@
+---
+title: "Final Project References"
+author: "Peizhi Liu"
+date: "2022-12-10"
+output: pdf_document
+bibliography: packages.bib
+nocite: '@*'
+---
+
+```{r include=FALSE}
+# load dependencies
+packages <- c("tidyverse", "reshape2", "fauxnaif", "gganimate", "ggthemes",
+              "stringr", "gridExtra", "gifski", "png", "ggrepel", "scales",
+              "lubridate", "paletteer", "GGally", "systemfonts", "extrafont",
+              "colorspace", "sf", "rnaturalearth", "ggmap",
+              "rnaturalearthdata", "paletteer", "stringr", "haven",
+              "plotly", "ggridges", "shiny", "countrycode", "extrafont", "wesanderson", "ncdf4", "raster", "rgdal", "abind", "ggnewscale", "countrycode", "palmerpenguins")
+
+lapply(packages, require, character.only = TRUE)
+
+```
+
+```{r include=FALSE}
+library(knitr)
+library(rcrossref)
+knitr::write_bib(packages, 
+                 width = 60, 
+                 file = "C:\\Users\\peizh\\Documents\\Synced\\2022_Fall_Classes\\PolySci390\\Blog\\final-assignment\\figures\\packages.bib")
+```

@@ -80,4 +80,6 @@ Microplastics in oceans come mostly from ordinary sources such as textiles, tire
 
 [8] 2017年2-11月我国合成纤维产量4132.5万吨，其中6月产量最高. (2018, January 19). Retrieved December 9, 2022, from https://www.chinabaogao.com/detail/315036.html 
 
+[Package References](fina_project_references.pdf)
+
 [Back](../README.md)

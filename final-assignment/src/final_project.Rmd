@@ -71,7 +71,7 @@ raster_df  <- data.frame(raster_pts)
 
 ```
 
-\
+
 
 ```{r}
 # Read in plastic waste and pollution datasets
@@ -96,13 +96,13 @@ countries_emit_mapping <- inner_join(all_countries,
 # Plot plastic waste generated
 countries_waste_mapping %>%
   ggplot(aes(fill=Metric.Tonnes)) + 
-  geom_sf() + 
-  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), name = "Metric Tonnes", trans = "log") + 
+  geom_sf(lwd = 1) + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), name = "Metric Tonnes", trans = "log10") + 
   new_scale_fill() + 
   geom_raster(data = raster_df, aes(x=x, y=y, fill=layer), inherit.aes = FALSE) + 
   scale_fill_gradientn(colors = rev(rainbow(7)[-7]), 
                        limits = c(1e2, 5e7),
-                       trans = "log",
+                       trans = "log10",
                        name = "MP Concentration (n/km^2)") +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +  
   ggtitle("Plastic Waste Generated & Microplastics Concentration (2010)") + 
@@ -116,13 +116,13 @@ ggsave("../figures/plastic-waste-microplastics-concentration.png",
 # Plot plastic waste emitted
 countries_emit_mapping %>%
   ggplot(aes(fill=Metric.Tonnes)) + 
-  geom_sf() + 
-  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), name = "Metric Tonnes", trans = "log") + 
+  geom_sf(lwd=1) + 
+  scale_fill_gradientn(colors = rev(rainbow(7)[-7]), name = "Metric Tonnes", trans = "log10") + 
   new_scale_fill() + 
   geom_raster(data = raster_df, aes(x=x, y=y, fill=layer), inherit.aes = FALSE) + 
   scale_fill_gradientn(colors = rev(rainbow(7)[-7]), 
                        limits = c(1e2, 5e7),
-                       trans = "log",
+                       trans = "log10",
                        name = "MP Concentration (n/km^2)") +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +  
   ggtitle("Plastic Waste Emitted into Ocean & Microplastics Concentration (2019)") + 
@@ -144,7 +144,7 @@ proportion_data %>%
   ggtitle("Sources of Primary Microplastics Released into Ocean") + 
   coord_flip() + 
   guides(fill=guide_legend(title="Microplastic Source")) + 
-  scale_fill_discrete(labels=c("Synthetic Textiles", "Tyres", "Road Markings", "Marine Coatings", "Personal Care Products", "Plast Pellets")) + 
+  scale_fill_discrete(labels=c("Synthetic Textiles", "Tires", "Road Markings", "Marine Coatings", "Personal Care Products", "Plastic Pellets")) + 
   t
 
 ggsave("../figures/microplastic-src-percentage.png", 
@@ -292,7 +292,7 @@ raster_df_2017 %>%
   geom_raster(aes(x=x, y=y, fill=value), inherit.aes = FALSE) + 
   scale_fill_gradientn(colors = rev(rainbow(7)[-7]), 
                        limits = c(1e-3,5e7),
-                       trans = "log",
+                       trans = "log10",
                        name = "MP Concentration (n/km^2)") +
   xlim(110, 140) + ylim(20,40) + 
   geom_point(aes(x=122, y=32), data=dat, size=40, shape=1, color="#C93311", stroke=2) + 
@@ -316,8 +316,24 @@ waste_primary <- read.csv("../data/region_waste_micro.csv")
 
 waste_primary %>%
   melt(id="Region") %>%
-  ggplot(aes(fill=variable, y=value, x=Region)) + 
+  ggplot(aes(fill=variable, y=value / 1e6, x=Region)) + 
   coord_flip() + 
   geom_bar(stat="identity") + 
+  ggtitle("Effective Microplastics Ocean Release per Year") + 
+  ylab("Million Tonnes") + 
+  guides(fill=guide_legend(title="Type")) + 
+  scale_fill_discrete(labels=c("Primary Microplastics", "Plastic Waste")) + 
   t
+
+ggsave("../figures/effective-microplastics-release.png", 
+       width=10, height=5)
+```
+
+```{r}
+# References
+library(knitr)
+library(rcrossref)
+knitr::write_bib(packages, 
+                 width = 60, 
+                 file = "C:\\Users\\peizh\\Documents\\Synced\\2022_Fall_Classes\\PolySci390\\Blog\\final-assignment\\figures\\packages.bib")
 ```
