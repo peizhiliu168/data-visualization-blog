@@ -71,8 +71,6 @@ raster_df  <- data.frame(raster_pts)
 
 ```
 
-
-
 ```{r}
 # Read in plastic waste and pollution datasets
 plastic_waste_2010 <- read.csv("../data/plastic_waste_2010.csv")

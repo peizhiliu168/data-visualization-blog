@@ -41,7 +41,7 @@ While this visualization does not give a reason for this apparent energy wall no
 Given the current problems with sustainable energy production in Africa, which sector - industry, household, or government - should drive more sustainable energy production? While the answer to this question might be nuanced, the simplest approach is to assign responsibility to the sector that consumes the most electricity. The below visualization shows the amount and proportion of total electricity consumed by each sector. 
 
 <p align="center">
-  <img src="./static/Energy-Consumption.png" alt="Total and proportional electricity consumption by sector" width="500"/>
+  <img src="./static/Energy-Consumption.png" alt="Total and proportional electricity consumption by sector" width="800"/>
 </p>
 
 From this visualization, Africa's electricity consumption has been increasing in all three sectors. It is also evident that the industrial sector consumes the highest proportion of electricity at around 50 percent. Interestingly, however, the proportion of electricity consumption in the industrial sector has been decreasing from 2000 to 2014 and its consumption in the household and public sectors has risen. While the use of more sustainable sources of energy should be driven by the industry sector, the actual execution of the pivot to more sustainable resources should involve all sectors. These sectors, after all, are not mutually exclusive. The main limitation of this figure is that it only shows energy consumption in terms of electricity. It would have been more beneficial if there was data on the total amount of energy consumed (mutually exclusive in terms of different forms of energy) relative to each sector. 

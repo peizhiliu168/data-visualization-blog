@@ -14,7 +14,7 @@ Apart from the censorship relationship, it appears that the Americas, Europe, an
   <img src="./static/academic-exchange-inter-censorship-dot.png" alt="Academic Exchange vs. Internet Censorship, Regions (2021)" width="600"/>
 </p>
 
-We see that these regions generally follow a linear correlation between ICE and FAED with respectable variance. As expected, there is clustering in the Americas, Europe, and Oceania where censorship of both variables is low. Africa and Asia, on the other hand, are more uniform. 
+We see that these regions generally follow a linear correlation between ICE and FAED with respectable variance, as shown by the surrounding gray area. Notably, there is more significant uncertainty for Oceania because there are fewer data points. As expected, there is clustering in the Americas, Europe, and Oceania where censorship of both variables is low. Africa and Asia, on the other hand, are more uniform. 
 
 The implications of these linear trends highlight the potential reliance academia has on the internet. While it might be possible governments are proactively censoring academic exchange and dissemination on other channels, it is also possible that academic censorship is really an adverse effect of the broader internet censorship. 
 

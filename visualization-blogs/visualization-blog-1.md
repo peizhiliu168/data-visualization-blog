@@ -23,8 +23,8 @@ cpi_data %>%
   ylim(-14.0, 4) + ylab("Over-the-month percent change") +
   scale_y_continuous(labels = percent) +
   scale_size(name="Relative Importance") +
-  geom_vline(xintercept = 0.083, linetype="dotted", color = "green", size=1) +
-  geom_hline(yintercept = 0, linetype="dotted", color = "green", size=1) +
+  geom_vline(xintercept = 0.083, linetype="dashed", size=0.2, color = "darkgreen", size=1) +
+  geom_hline(yintercept = 0, linetype="dashed", size=0.2, color = "darkgreen", size=1) +
   annotate(geom="text", x=0.115, y=-0.12, label="All items: 8.3%", size=3) +
   annotate(geom="text", x=0.08, y=-0.004, label="All items: 0.0%", size=3) +
   geom_point(alpha=0.5)
@@ -32,7 +32,7 @@ cpi_data %>%
 ```
 Result:
 <p align="center">
-  <img src="./static/reproduced-vis.jpg" width="500"/>
+  <img src="./static/reproduced-vis.png" width="500"/>
 </p>
 
 ## Student Debt Relief - Bad Visualization

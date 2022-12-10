@@ -40,7 +40,7 @@ africa_join %>%
   select(RegionName, GDP, Date) %>%
   filter(Date==2000 | Date==2005 | Date==2010) %>%
   mutate(Date=as.character(Date)) %>%
-  ggplot(aes(x=Date, y=GDP)) + 
+  ggplot(aes(x=Date, y=GDP, fill=factor(Date))) + 
   xlab("Year") + ylab("log GDP (USD)") + ggtitle("African Countries GDP Distribution (2000 - 2010)") +
   ggdist::stat_halfeye(adjust = .5, width = .4, .width = 0, justification = -.3, point_colour = NA) + # Draw the density plot
   scale_y_continuous(trans='log2', labels = function(x) formatC(x, format = "e", digits = 2)) + # Make this a log plot (log-normal)
