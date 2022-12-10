@@ -64,12 +64,20 @@ As for why a slight increase in synthetic fiber production may lead to a drastic
 Microplastics in oceans come mostly from ordinary sources such as textiles, tires, and cosmetic products. They have been shown to spread pervasively throughout the world's oceans with high concentrations along major ocean currents. While often accounting for only a small fraction of total plastics released into the world's oceans, its chemical potency, and its secondary formation will likely cause great harm to humans, other organisms, and the environment. While microplastics are small and often intangible, it is important to remember that this intangibility is what makes microplastics even more pervasive, dangerous, and obscure. 
 
 ## References
-1. https://archimer.ifremer.fr/doc/00169/28064/27275.pdf
-2. https://www.webmd.com/a-to-z-guides/news/20221028/microplastics-health-risks-what-do-we-really-know#:~:text=Microplastics%20as%20Carriers&text=%E2%80%9CThese%20chemicals%20are%20known%20environmental,inflammation%2C%20or%20other%20unknown%20effects.
-3. Microplastics source: https://portals.iucn.org/library/sites/library/files/documents/2017-002-En.pdf
-4. Microplastics concentration: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9449485
-5. Global plastics waste and emmision: https://ourworldindata.org/plastic-pollution
-6. Global textile imports exports dataset (HS92): https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/T4CHWJ&version=5.0
-7. https://oec.world/en/profile/hs/synthetic-fabrics#:~:text=In%202020%2C%20the%20top%20exporters,%2C%20and%20China%20(%24114M)
-8. China 2017 synthetic textiles production: https://www.chinabaogao.com/detail/315036.html 
+[1] Collignon, A., Hecq, J.-H., Galgani, F., Collard, F., &amp; Goffart, A. (2014). Annual variation in neustonic micro- and Meso-plastic particles and zooplankton in the Bay of Calvi (mediterranean–corsica). Marine Pollution Bulletin, 79(1-2), 293–298. https://doi.org/10.1016/j.marpolbul.2013.11.023 
+
+[2] WebMD. (2022, October 28). Microplastics and health risks: What do we really know? WebMD. Retrieved December 9, 2022, from https://www.webmd.com/a-to-z-guides/news/20221028/microplastics-health-risks-what-do-we-really-know#:~:text=Microplastics%20as%20Carriers&amp;text=%E2%80%9CThese%20chemicals%20are%20known%20environmental,inflammation%2C%20or%20other%20unknown%20effects. 
+
+[3] Boucher, J., &amp; Friot, D. (2017). Primary microplastics in the oceans: A global evaluation of sources. https://doi.org/10.2305/iucn.ch.2017.01.en 
+
+[4] Evans, M. C., &amp; Ruf, C. S. (2022). Toward the detection and imaging of ocean microplastics with a spaceborne radar. IEEE Transactions on Geoscience and Remote Sensing, 60, 1–9. https://doi.org/10.1109/tgrs.2021.3081691 
+
+[5] Ritchie, H., &amp; Roser, M. (2018, September 1). Plastic pollution. Our World in Data. Retrieved December 9, 2022, from https://ourworldindata.org/plastic-pollution#citation 
+
+[6] The Growth Lab at Harvard University. (2022, August 3). International Trade Data (HS, 92). Harvard Dataverse. Retrieved December 9, 2022, from https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi%3A10.7910%2FDVN%2FT4CHWJ&amp;version=5.0 
+
+[7] Synthetic fabrics. OEC. (n.d.). Retrieved December 9, 2022, from https://oec.world/en/profile/hs/synthetic-fabrics#:~:text=In%202020%2C%20the%20top%20exporters,%2C%20and%20China%20(%24114M) 
+
+[8] 2017年2-11月我国合成纤维产量4132.5万吨，其中6月产量最高. (2018, January 19). Retrieved December 9, 2022, from https://www.chinabaogao.com/detail/315036.html 
+
 [Back](../README.md)

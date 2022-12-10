@@ -16,8 +16,7 @@ Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/peizhiliu
 
 1. <a href="visualization-blogs\visualization-blog-1.md">Visualization 1</a>
 2. <a href="visualization-blogs\visualization-blog-2.md">Visualization 2</a>
-3. <a href="visualization-blogs\visualization-blog-3.md">Visualization 3</a>
-4. <a href="visualization-blogs\visualization-blog-4.md">Visualization 4</a>
+3. <a href="visualization-blogs\visualization-blog-3.md">Visualization 3 (Final Project Proposal)</a>
 
 </details>
 
